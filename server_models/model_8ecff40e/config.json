@@ -1,0 +1,18 @@
+{
+  "model_id": "model_8ecff40e",
+  "target": "loan_approved",
+  "features": [
+    "income",
+    "loan_amount",
+    "credit_score",
+    "employment_years",
+    "debt_ratio",
+    "age",
+    "savings",
+    "loan_term",
+    "risk_score",
+    "financial_index"
+  ],
+  "input_size": 10,
+  "version": 2
+}

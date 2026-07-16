@@ -1,0 +1,143 @@
+{
+  "model_efe11c9a": {
+    "name": "lable",
+    "description": "asdf",
+    "features_info": "https://eternal-debtless-rebuff.ngrok-free.dev sd",
+    "target": "label",
+    "creator": "userA",
+    "users": [
+      "userA"
+    ],
+    "version": 1,
+    "performance": 0.55,
+    "prev_performance": null,
+    "improvement": null,
+    "last_updated": "2026-05-05 05:04 UTC",
+    "features": [
+      "col1",
+      "col2",
+      "col3"
+    ],
+    "input_size": 3,
+    "last_csv_hash": "9ac9eb69cf9a322a19d64f6c4b3e4e0e"
+  },
+  "model_327bf24b": {
+    "name": "cardio",
+    "description": "cardio",
+    "features_info": "cardio",
+    "target": "cardio",
+    "creator": "userA",
+    "users": [
+      "userA"
+    ],
+    "version": 1,
+    "performance": 0.5886,
+    "prev_performance": null,
+    "improvement": null,
+    "last_updated": "2026-05-05 05:05 UTC",
+    "features": [
+      "age",
+      "gender",
+      "height",
+      "weight",
+      "ap_hi",
+      "ap_lo",
+      "cholesterol",
+      "gluc",
+      "smoke",
+      "alco",
+      "active"
+    ],
+    "input_size": 11,
+    "last_csv_hash": "71c46a70f7ba9e3e4736ae73ecd5bac9"
+  },
+  "model_3e1be5a1": {
+    "name": "churn",
+    "description": "ff",
+    "features_info": "gb",
+    "target": "Churn",
+    "creator": "userA",
+    "users": [
+      "userA",
+      "userB"
+    ],
+    "version": 1,
+    "performance": 0.5398,
+    "prev_performance": null,
+    "improvement": null,
+    "last_updated": "2026-05-05 05:18 UTC",
+    "features": [
+      "Contract",
+      "OnlineBackup_No",
+      "OnlineBackup_No internet service",
+      "OnlineBackup_Yes",
+      "OnlineSecurity_No",
+      "OnlineSecurity_No internet service",
+      "OnlineSecurity_Yes",
+      "PaymentMethod_Bank transfer (automatic)",
+      "PaymentMethod_Credit card (automatic)",
+      "PaymentMethod_Electronic check",
+      "PaymentMethod_Mailed check",
+      "InternetService_DSL",
+      "InternetService_Fiber optic",
+      "InternetService_No",
+      "DeviceProtection_No",
+      "DeviceProtection_No internet service",
+      "DeviceProtection_Yes",
+      "TechSupport_No",
+      "TechSupport_No internet service",
+      "TechSupport_Yes",
+      "StreamingTV_No",
+      "StreamingTV_No internet service",
+      "StreamingTV_Yes",
+      "MultipleLines_No",
+      "MultipleLines_No phone service",
+      "MultipleLines_Yes",
+      "StreamingMovies_No",
+      "StreamingMovies_No internet service",
+      "StreamingMovies_Yes",
+      "PaperlessBilling_No",
+      "PaperlessBilling_Yes",
+      "gender",
+      "SeniorCitizen",
+      "Partner",
+      "Dependents",
+      "tenure",
+      "PhoneService",
+      "MonthlyCharges",
+      "TotalCharges"
+    ],
+    "input_size": 39,
+    "last_csv_hash": "ce55cd7e6b844f899fc73575ed738dd2"
+  },
+  "model_8ecff40e": {
+    "name": "bank",
+    "description": "loan model",
+    "features_info": "",
+    "target": "loan_approved",
+    "creator": "userC",
+    "users": [
+      "userC",
+      "userD"
+    ],
+    "version": 2,
+    "performance": 0.7333,
+    "prev_performance": 0.7,
+    "improvement": 3.33,
+    "last_updated": "2026-05-05 09:02 UTC",
+    "features": [
+      "income",
+      "loan_amount",
+      "credit_score",
+      "employment_years",
+      "debt_ratio",
+      "age",
+      "savings",
+      "loan_term",
+      "risk_score",
+      "financial_index"
+    ],
+    "input_size": 10,
+    "last_csv_hash": "a8e936aa2f8e0948f5a4c57e61167587"
+  }
+}

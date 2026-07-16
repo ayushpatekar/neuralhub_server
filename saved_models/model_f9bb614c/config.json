@@ -1,0 +1,10 @@
+{
+    "model_id": "model_f9bb614c",
+    "target": "label",
+    "features": [
+        "col1",
+        "col2",
+        "col3"
+    ],
+    "input_size": 3
+}

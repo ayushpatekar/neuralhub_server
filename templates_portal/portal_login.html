@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuralHub — Prediction Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090d13;--bg1:#0f1520;--bg2:#161e2e;
+  --ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.11);
+  --blue:#3b82f6;--blue-d:#2563eb;--blue-bg:rgba(59,130,246,0.10);--blue-bd:rgba(59,130,246,0.28);
+  --red:#ef4444;
+  --t1:#edf2f7;--t2:#8b96aa;--t3:#4a5468;
+  --r:7px;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t1);font-size:15px}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{width:380px;background:var(--bg1);border:1px solid var(--ln2);border-radius:16px;padding:40px}
+.logo{display:flex;align-items:center;gap:13px;margin-bottom:10px}
+.logo-icon{width:44px;height:44px;border-radius:10px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;font-family:var(--mono)}
+.logo-name{font-size:20px;font-weight:600}
+.logo-sub{font-size:11px;color:var(--t3);font-family:var(--mono);letter-spacing:.06em;margin-top:2px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);margin-bottom:28px;margin-top:6px}
+.tabs{display:flex;border-bottom:1px solid var(--ln);margin-bottom:26px}
+.tab{flex:1;text-align:center;padding:10px;font-size:14px;font-weight:500;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--t2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em}
+.field input{width:100%;background:var(--bg2);border:1px solid var(--ln2);color:var(--t1);font-family:var(--sans);font-size:14px;padding:10px 13px;border-radius:var(--r);outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,0.12)}
+.field input::placeholder{color:var(--t3)}
+.err{color:var(--red);font-size:13px;margin-bottom:12px;min-height:18px}
+.btn{width:100%;padding:11px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:var(--sans);border:none;cursor:pointer;background:var(--blue);color:#fff;transition:background .15s}
+.btn:hover{background:var(--blue-d)}
+.note{font-size:12px;color:var(--t3);margin-top:18px;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="logo">
+    <div class="logo-icon">N</div>
+    <div>
+      <div class="logo-name">NeuralHub</div>
+      <div class="logo-sub">FEDERATED ML</div>
+    </div>
+  </div>
+  <div class="badge">Prediction Portal</div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-in" onclick="switchTab('in')">Sign In</div>
+    <div class="tab" id="tab-reg" onclick="switchTab('reg')">Register</div>
+  </div>
+
+  <div id="form-in">
+    <div class="field"><label>Username</label><input id="in-user" type="text" placeholder="your username" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input id="in-pass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <div class="err" id="in-err"></div>
+    <button class="btn" onclick="doLogin()">Sign In</button>
+  </div>
+
+  <div id="form-reg" style="display:none">
+    <div class="field"><label>Username</label><input id="reg-user" type="text" placeholder="choose a username"></div>
+    <div class="field"><label>Password</label><input id="reg-pass" type="password" placeholder="choose a password" autocomplete="new-password"></div>
+    <div class="err" id="reg-err"></div>
+    <button class="btn" onclick="doRegister()">Create Account</button>
+  </div>
+
+  <p class="note">Your account is stored securely on the server.<br>Chat with our AI to get your prediction — no tech knowledge needed!</p>
+</div>
+
+<script>
+function switchTab(t) {
+  document.getElementById('form-in').style.display  = t === 'in'  ? '' : 'none';
+  document.getElementById('form-reg').style.display = t === 'reg' ? '' : 'none';
+  document.getElementById('tab-in').classList.toggle('active', t === 'in');
+  document.getElementById('tab-reg').classList.toggle('active', t === 'reg');
+}
+async function doLogin() {
+  const u = document.getElementById('in-user').value.trim();
+  const p = document.getElementById('in-pass').value.trim();
+  const el = document.getElementById('in-err'); el.textContent='';
+  if (!u || !p) { el.textContent='Please fill all fields.'; return; }
+  const r = await fetch('/api/portal/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u,password:p})}).then(r=>r.json());
+  if (r.ok) { window.location.href='/'; }
+  else { el.textContent = r.error || 'Login failed.'; }
+}
+async function doRegister() {
+  const u = document.getElementById('reg-user').value.trim();
+  const p = document.getElementById('reg-pass').value.trim();
+  const el = document.getElementById('reg-err'); el.textContent='';
+  if (!u || !p) { el.textContent='Please fill all fields.'; return; }
+  const r = await fetch('/api/portal/register', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:u,password:p})}).then(r=>r.json());
+  if (r.ok) { window.location.href='/'; }
+  else { el.textContent = r.error || 'Registration failed.'; }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const isReg = document.getElementById('form-reg').style.display !== 'none';
+    isReg ? doRegister() : doLogin();
+  }
+});
+</script>
+</body>
+</html>

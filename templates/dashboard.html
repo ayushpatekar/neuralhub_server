@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuralHub</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090d13;--bg1:#0f1520;--bg2:#161e2e;--bg3:#1e2840;
+  --ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.12);
+  --blue:#3b82f6;--blue-d:#2563eb;--blue-bg:rgba(59,130,246,0.10);--blue-bd:rgba(59,130,246,0.28);
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.10);--green-bd:rgba(34,197,94,0.25);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.10);--red-bd:rgba(239,68,68,0.28);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.10);
+  --t1:#edf2f7;--t2:#8b96aa;--t3:#4a5468;
+  --r:7px;--r2:12px;--sans:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;
+}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t1);font-size:15px;line-height:1.55}
+input,textarea,select{font-family:var(--sans);font-size:14px;color:var(--t1);background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--r);padding:9px 12px;width:100%;outline:none;transition:border-color .15s}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,0.12)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:9px}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* ── NAV — Dashboard + New + Join + sep + server + settings + logout + user ── */
+#nav{display:flex;align-items:center;height:52px;padding:0 18px;gap:2px;background:var(--bg1);border-bottom:1px solid var(--ln);flex-shrink:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:600;padding-right:20px;border-right:1px solid var(--ln);margin-right:6px;white-space:nowrap}
+.nav-logo-icon{width:28px;height:28px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--mono);color:#fff}
+.nav-btn{display:flex;align-items:center;gap:5px;padding:0 13px;height:52px;font-size:14px;font-weight:500;color:var(--t2);background:transparent;border:none;cursor:pointer;transition:color .15s,background .15s;white-space:nowrap;font-family:var(--sans);border-bottom:2px solid transparent}
+.nav-btn:hover{color:var(--t1);background:var(--bg2)}
+.nav-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.nav-sep{flex:1}
+.nav-user{display:flex;align-items:center;gap:9px;padding-left:16px;border-left:1px solid var(--ln)}
+.nav-av{width:30px;height:30px;border-radius:50%;background:var(--blue-bg);border:1px solid var(--blue-bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);font-family:var(--mono)}
+.srv-indicator{display:flex;align-items:center;gap:6px;margin-right:14px}
+.srv-dot{width:8px;height:8px;border-radius:50%;background:var(--t3);transition:background .3s}
+.srv-dot.online{background:var(--green);box-shadow:0 0 7px var(--green)}
+.srv-dot.offline{background:var(--red)}
+.srv-lbl{font-size:12px;color:var(--t3)}
+
+/* ── CONTENT ── */
+#content{flex:1;overflow-y:auto;overflow-x:hidden}
+.page{display:none;padding:30px 36px 56px;max-width:1280px;margin:0 auto}
+.page.active{display:block}
+
+/* ── DASHBOARD ── */
+.pg-title{font-size:22px;font-weight:600;margin-bottom:4px}
+.pg-sub{font-size:14px;color:var(--t3);margin-bottom:26px}
+.stats{display:flex;gap:14px;margin-bottom:24px}
+.stat{flex:1;background:var(--bg1);border:1px solid var(--ln);border-radius:var(--r2);padding:16px 18px}
+.stat-lbl{font-size:11px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);margin-bottom:5px}
+.stat-val{font-size:28px;font-weight:600;color:var(--t1);line-height:1;font-family:var(--mono)}
+.stat-hint{font-size:12px;color:var(--t3);margin-top:4px}
+.action-bar{display:flex;gap:10px;margin-bottom:18px;align-items:center}
+
+
+/* ── MODEL GRID ── */
+#model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.model-tile{background:var(--bg1);border:1px solid var(--ln);border-radius:var(--r2);padding:16px;cursor:pointer;transition:border-color .15s,background .15s;user-select:none}
+.model-tile:hover{border-color:var(--blue);background:var(--bg2)}
+.tile-icon{font-size:28px;margin-bottom:11px;opacity:.65}
+.tile-name{font-size:14px;font-weight:600;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile-target{font-size:12px;color:var(--t2);font-family:var(--mono);margin-bottom:10px}
+.tile-footer{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.badge{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.badge-owner{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.badge-joined{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.ver-tag{font-size:11px;font-family:var(--mono);color:var(--t3);background:var(--bg3);padding:2px 6px;border-radius:4px}
+.ver-tag.updated{color:var(--amber);background:var(--amber-bg)}
+.perf-tag{font-size:11px;font-family:var(--mono);color:var(--green)}
+.empty{grid-column:1/-1;text-align:center;padding:64px 24px;background:var(--bg1);border:1px dashed var(--ln2);border-radius:var(--r2)}
+.empty-icon{font-size:2.2rem;opacity:.2;margin-bottom:14px}
+.empty-title{font-size:16px;font-weight:600;color:var(--t2);margin-bottom:5px}
+.empty-sub{font-size:13px;color:var(--t3)}
+
+/* ── CONTEXT MENU ── */
+#ctx-menu{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--r2);overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.55);min-width:170px;display:none}
+.ctx-item{display:flex;align-items:center;gap:9px;padding:10px 16px;font-size:13px;color:var(--t2);cursor:pointer;transition:background .1s}
+.ctx-item:hover{background:var(--bg3);color:var(--t1)}
+.ctx-item.danger:hover{background:var(--red-bg);color:var(--red)}
+.ctx-sep{height:1px;background:var(--ln);margin:3px 0}
+
+/* ── MODEL DETAIL ── */
+.detail-header{display:flex;align-items:flex-start;gap:18px;margin-bottom:28px}
+.detail-back{padding:7px 14px;font-size:13px;color:var(--t2);background:transparent;border:1px solid var(--ln2);border-radius:var(--r);cursor:pointer;font-family:var(--sans);transition:all .15s;white-space:nowrap;margin-top:4px}
+.detail-back:hover{background:var(--bg2);color:var(--t1)}
+.detail-info{flex:1}
+.detail-tag{font-size:11px;font-weight:500;color:var(--blue);font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.detail-name{font-size:24px;font-weight:600}
+.detail-desc{font-size:13px;color:var(--t3);margin-top:3px}
+.detail-meta{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.detail-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--bg1);border:1px solid var(--ln);border-radius:var(--r2);overflow:hidden;margin-bottom:16px}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--ln);font-size:12px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);display:flex;align-items:center;gap:8px}
+.card-head::before{content:'';display:inline-block;width:3px;height:11px;background:var(--blue);border-radius:2px}
+.card-body{padding:18px}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:9px 14px;font-size:14px}
+.kv-k{color:var(--t3)}.kv-v{color:var(--t1);font-weight:500;word-break:break-all}.kv-mono{font-family:var(--mono);font-size:12px}
+.ver-banner{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--amber-bg);border:1px solid rgba(245,158,11,.25);border-radius:var(--r);margin-bottom:14px;font-size:13px}
+.drop-zone{border:1.5px dashed var(--ln2);border-radius:var(--r2);padding:26px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:14px}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--blue);background:var(--blue-bg)}
+.drop-zone-icon{font-size:24px;opacity:.4;margin-bottom:7px}
+.drop-zone-text{font-size:14px;color:var(--t2)}
+.drop-zone-hint{font-size:12px;color:var(--t3);margin-top:3px}
+#file-input{display:none}
+.prog-wrap{background:var(--bg3);border-radius:4px;height:4px;margin-top:10px;overflow:hidden;display:none}
+.prog-bar{height:100%;background:var(--blue);border-radius:4px;width:0%;transition:width .3s}
+.predict-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.field-unit{position:relative}.field-unit input{padding-right:48px}
+.field-unit .unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--t3);font-family:var(--mono);pointer-events:none}
+.result-box{border-radius:var(--r2);padding:16px 18px;margin-top:16px}
+.result-box.positive{background:var(--red-bg);border:1px solid var(--red-bd)}
+.result-box.negative{background:var(--green-bg);border:1px solid var(--green-bd)}
+.result-lbl{font-size:11px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);margin-bottom:5px}
+.result-val{font-size:24px;font-weight:600;font-family:var(--mono)}
+.result-conf{font-size:12px;color:var(--t3);font-family:var(--mono);margin-top:4px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:14px;font-weight:500;font-family:var(--sans);border:1px solid var(--ln2);cursor:pointer;color:var(--t2);background:transparent;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--bg2);color:var(--t1)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-d);border-color:var(--blue-d);color:#fff}
+.btn-danger{background:var(--red);border-color:var(--red);color:#fff}.btn-danger:hover{background:#dc2626}
+.btn-full{width:100%}
+.btn-sm{padding:5px 11px;font-size:12px}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg1);border:1px solid var(--ln2);border-radius:16px;padding:30px;width:440px;box-shadow:0 28px 80px rgba(0,0,0,.65);transform:scale(.95);transition:transform .2s}
+.overlay.open .modal{transform:scale(1)}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:5px}
+.modal-sub{font-size:13px;color:var(--t3);margin-bottom:22px}
+.modal-top{border-top:3px solid var(--blue);border-radius:16px 16px 0 0}
+.modal-danger{border-top:3px solid var(--red)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.err-msg{color:var(--red);font-size:13px;margin-bottom:10px;display:none}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:26px;right:26px;z-index:9998;background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--r2);padding:13px 20px;font-size:13px;color:var(--t1);box-shadow:0 8px 32px rgba(0,0,0,.4);transform:translateY(70px);opacity:0;transition:all .25s;pointer-events:none;max-width:340px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-left:3px solid var(--green)}
+#toast.error{border-left:3px solid var(--red)}
+#toast.info{border-left:3px solid var(--blue)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- NAV: Logo | Dashboard | ＋New | ⟳Join | sep | server | ⚙ | logout | user -->
+  <nav id="nav">
+    <div class="nav-logo"><div class="nav-logo-icon">N</div>NeuralHub</div>
+    <button class="nav-btn active" id="nb-dashboard" onclick="showTab('models')">⊞ Dashboard</button>
+    <button class="nav-btn" onclick="openModal('m-create')">＋ New</button>
+    <button class="nav-btn" onclick="openModal('m-join')">⟳ Join</button>
+    <div class="nav-sep"></div>
+    <div class="srv-indicator"><div class="srv-dot" id="srv-dot"></div><span class="srv-lbl" id="srv-lbl">Checking…</span></div>
+    <button class="nav-btn" onclick="openModal('m-settings')">⚙</button>
+    <button class="nav-btn" onclick="doLogout()">Sign Out</button>
+    <div class="nav-user"><div class="nav-av" id="nav-av">U</div><span style="font-size:13px;color:var(--t2)" id="nav-un"></span></div>
+  </nav>
+
+  <div id="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+
+      <div class="pg-title">Dashboard</div>
+      <div class="pg-sub">Welcome back, <span id="dash-username"></span></div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="stat-lbl">Total</div><div class="stat-val" id="s-total">0</div><div class="stat-hint">Models in workspace</div></div>
+        <div class="stat"><div class="stat-lbl">Owned</div><div class="stat-val" id="s-owned">0</div><div class="stat-hint">Created by you</div></div>
+        <div class="stat"><div class="stat-lbl">Joined</div><div class="stat-val" id="s-joined">0</div><div class="stat-hint">Collaborative</div></div>
+      </div>
+
+      <!-- MODELS PANEL -->
+      <div class="dash-panel active" id="dpanel-models">
+        <div class="action-bar">
+          <button class="btn btn-primary" onclick="openModal('m-create')">＋ New Model</button>
+          <button class="btn" onclick="openModal('m-join')">⟳ Join Model</button>
+          <button class="btn btn-sm" onclick="loadModels()" style="margin-left:auto">↻ Refresh</button>
+        </div>
+        <div id="model-grid"><div class="empty"><div class="empty-icon">⬡</div><div class="empty-title">Loading…</div></div></div>
+      </div>
+
+    </div><!-- /page-dashboard -->
+
+    <!-- MODEL DETAIL (separate page, back → dashboard) -->
+    <div class="page" id="page-detail">
+      <div class="detail-header">
+        <button class="detail-back" onclick="showPage('dashboard');showTab('models')">← Back to Dashboard</button>
+        <div class="detail-info">
+          <div class="detail-tag">Model Detail</div>
+          <div class="detail-name" id="d-name">—</div>
+          <div class="detail-desc" id="d-desc">—</div>
+          <div class="detail-meta">
+            <span class="badge badge-owner" id="d-role-badge"></span>
+            <span class="ver-tag" id="d-ver">v0</span>
+            <span class="perf-tag" id="d-perf"></span>
+            <span style="font-size:12px;color:var(--t3)" id="d-updated"></span>
+          </div>
+        </div>
+      </div>
+      <div id="d-ver-banner" style="display:none" class="ver-banner">
+        <span>⬆</span><span>Updated to <b id="d-banner-ver">v?</b></span>
+      </div>
+      <div class="detail-cols">
+        <div>
+          <div class="card">
+            <div class="card-head">Configuration</div>
+            <div class="card-body">
+              <div class="kv">
+                <div class="kv-k">Target column</div><div class="kv-v kv-mono" id="d-target">—</div>
+                <div class="kv-k">Model ID</div><div class="kv-v kv-mono" id="d-mid" style="font-size:11px">—</div>
+                <div class="kv-k">Creator</div><div class="kv-v" id="d-creator">—</div>
+                <div class="kv-k">Features</div><div class="kv-v" style="font-size:12px;color:var(--t2)" id="d-features">—</div>
+                <div class="kv-k">Members</div><div class="kv-v" id="d-members">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">Federated Training</div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--t3);margin-bottom:14px;line-height:1.6">Upload your local CSV. Your data stays on your PC — only model weights are sent to the server.</p>
+              <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <div class="drop-zone-icon">📂</div>
+                <div class="drop-zone-text" id="drop-text">Click or drag & drop CSV</div>
+                <div class="drop-zone-hint">CSV files · semicolon or comma separated</div>
+              </div>
+              <input type="file" id="file-input" accept=".csv" onchange="onFileSelect(this)">
+              <div class="prog-wrap" id="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+              <button class="btn btn-primary btn-full" id="train-btn" onclick="doTrain()" disabled>Start Training</button>
+              <div id="train-result" style="margin-top:10px;font-size:13px;color:var(--t2)"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-head">Prediction</div>
+            <div class="card-body">
+              <div id="predict-form-wrap"><p style="font-size:13px;color:var(--t3)">Train the model first to unlock predictions.</p></div>
+              <div id="predict-result"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-detail -->
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+  <div class="ctx-item" onclick="ctxOpen()">⊞ Open</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxCopyId()">⎘ Copy model ID</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxRemove()">✕ Remove</div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="m-create">
+  <div class="modal modal-top">
+    <div class="modal-title">Create New Model</div>
+    <div class="modal-sub">Features are detected automatically on first training run.</div>
+    <div class="field"><label>Model Name</label><input id="c-name" type="text" placeholder="e.g. Heart Disease Predictor"></div>
+    <div class="field"><label>Description</label><textarea id="c-desc" placeholder="What does this model predict?"></textarea></div>
+    <div class="field"><label>Feature Notes <span style="color:var(--t3);font-size:11px">(helps AI ask correct questions)</span></label>
+      <textarea id="c-feat" placeholder="e.g. age in years, gender: male=0 female=1, height in cm, cholesterol: 1=normal 2=high 3=very high, smoke: 0=no 1=yes"></textarea></div>
+    <div class="field"><label>Target Column</label><input id="c-target" type="text" placeholder="e.g. cardio  (must match column name in CSV exactly)"></div>
+    <div id="c-err" class="err-msg"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('m-create')">Cancel</button>
+      <button class="btn btn-primary" onclick="doCreate()">Create Model</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-join">
+  <div class="modal modal-top">
+    <div class="modal-title">Join a Model</div>
+    <div class="modal-sub">Enter the model ID shared by its creator to collaborate</div>
+    <div class="field"><label>Model ID</label><input id="j-id" type="text" placeholder="model_xxxxxxxx"></div>
+    <div id="j-err" class="err-msg"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('m-join')">Cancel</button>
+      <button class="btn btn-primary" onclick="doJoin()">Join Model</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="m-settings">
+  <div class="modal modal-danger">
+    <div class="modal-title" style="color:var(--red)">Account Settings</div>
+    <div class="modal-sub">Your account and all data live on the server only</div>
+    <div style="background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--r);padding:16px;font-size:13px;color:var(--t2);line-height:1.65">
+      <b style="color:var(--red)">Delete Account</b><br>
+      Removes your account from the server. Models you own with no other members will also be deleted.
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('m-settings')">Cancel</button>
+      <button class="btn btn-danger" onclick="doDeleteAccount()">Delete My Account</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id='_autopage' data-page='{{ autopage|default("dashboard") }}' style='display:none'></div>
+
+<script>
+'use strict';
+let ME = null, models = [], currentMid = null, ctxMid = null, selFile = null;
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  let me = {logged_in: false};
+  try { me = await fetch('/api/me').then(r => r.json()); } catch(_) {}
+  if (!me.logged_in) { window.location.href = '/login'; return; }
+  ME = me.username;
+  document.getElementById('nav-av').textContent  = ME.slice(0,2).toUpperCase();
+  document.getElementById('nav-un').textContent  = ME;
+  document.getElementById('dash-username').textContent = ME;
+  loadModels();
+  checkServer();
+  setInterval(checkServer, 30000);
+  setupDrop();
+});
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(url, opts={}) {
+  try { return await fetch(url, {headers:{'Content-Type':'application/json'}, ...opts}).then(r=>r.json()); }
+  catch(e) { return {error: e.message}; }
+}
+const post = (url, body) => api(url, {method:'POST', body:JSON.stringify(body)});
+
+let _tt;
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  clearTimeout(_tt); _tt = setTimeout(()=>t.className='', 3600);
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function doLogout() { await post('/api/logout',{}); window.location.href='/login'; }
+async function doDeleteAccount() {
+  if (!confirm('Permanently delete your account?')) return;
+  const r = await post('/api/delete_account',{});
+  if (r.ok) window.location.href='/login';
+}
+
+// ── PAGE / TAB SWITCHING ──────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg = document.getElementById(`page-${name}`);
+  if (pg) pg.classList.add('active');
+  // Sync nav active state
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if (name === 'dashboard') document.getElementById('nb-dashboard').classList.add('active');
+}
+
+function showTab(tab) {
+  showPage('dashboard');
+  document.querySelectorAll('.dash-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.dash-panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  document.getElementById('dtab-models').classList.add('active');
+  const panel = document.getElementById('dpanel-models');
+  panel.classList.add('active');
+  panel.style.display = 'block';
+  document.getElementById('nb-dashboard').classList.add('active');
+  loadModels();
+}
+
+// ── SERVER STATUS ─────────────────────────────────────────────────────────────
+async function checkServer() {
+  try {
+    const r = await fetch('/api/server/status').then(r=>r.json());
+    document.getElementById('srv-dot').className = 'srv-dot ' + (r.online ? 'online' : 'offline');
+    document.getElementById('srv-lbl').textContent = r.online ? 'Server online' : 'Server offline';
+  } catch(_) {
+    document.getElementById('srv-dot').className = 'srv-dot offline';
+    document.getElementById('srv-lbl').textContent = 'Server offline';
+  }
+}
+
+// ── MODELS ────────────────────────────────────────────────────────────────────
+async function loadModels() {
+  const data = await api('/api/models');
+  if (data.error) { toast('Cannot reach server: '+data.error,'error'); return; }
+  models = Array.isArray(data) ? data : [];
+  const owned  = models.filter(m=>m.role==='owner').length;
+  const joined = models.filter(m=>m.role==='joined').length;
+  document.getElementById('s-total').textContent  = models.length;
+  document.getElementById('s-owned').textContent  = owned;
+  document.getElementById('s-joined').textContent = joined;
+  renderGrid();
+}
+
+function renderGrid() {
+  const g = document.getElementById('model-grid');
+  if (!models.length) {
+    g.innerHTML = `<div class="empty"><div class="empty-icon">⬡</div><div class="empty-title">No models yet</div><div class="empty-sub">Create a new model or join one with a model ID</div></div>`;
+    return;
+  }
+  g.innerHTML = models.map(m => {
+    const ver  = m.version || 0;
+    const perf = m.performance != null ? (m.performance*100).toFixed(1)+'%' : '';
+    const impr = m.improvement;
+    let imprHtml = '';
+    if (impr !== null && impr !== undefined) {
+      const sign = impr>=0?'+':''; const col = impr>=0?'var(--green)':'var(--red)';
+      imprHtml = `<span style="font-size:11px;font-family:var(--mono);color:${col}">${sign}${impr}pp</span>`;
+    }
+    return `<div class="model-tile" ondblclick="openModel('${m.id}')" oncontextmenu="showCtx(event,'${m.id}')">
+      <div class="tile-icon">⬡</div>
+      <div class="tile-name">${esc(m.name)}</div>
+      <div class="tile-target">→ ${esc(m.target)}</div>
+      <div class="tile-footer">
+        <span class="badge ${m.role==='owner'?'badge-owner':'badge-joined'}">${m.role}</span>
+        <span class="ver-tag ${ver>0?'updated':''}">v${ver}</span>
+        ${perf?`<span class="perf-tag">⬆${perf}</span>`:''}
+        ${imprHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CONTEXT MENU ──────────────────────────────────────────────────────────────
+function showCtx(e,mid){e.preventDefault();ctxMid=mid;const m=document.getElementById('ctx-menu');m.style.display='block';m.style.left=e.clientX+'px';m.style.top=e.clientY+'px';}
+document.addEventListener('click',()=>document.getElementById('ctx-menu').style.display='none');
+function ctxOpen(){openModel(ctxMid);}
+function ctxCopyId(){navigator.clipboard.writeText(ctxMid);toast('Model ID copied','info');}
+async function ctxRemove(){
+  const m=models.find(x=>x.id===ctxMid); const isDel=m?.role==='owner';
+  if(!confirm(`${isDel?'Delete':'Leave'} "${m?.name}"?`))return;
+  const r=await post(isDel?`/api/models/${ctxMid}/delete`:`/api/models/${ctxMid}/leave`,{});
+  if(r.ok){toast(`Model ${isDel?'deleted':'left'}`,'success');loadModels();}
+  else toast(r.error||'Failed','error');
+}
+
+// ── MODEL DETAIL ──────────────────────────────────────────────────────────────
+async function openModel(mid) {
+  currentMid = mid;
+  const m = await api(`/api/models/${mid}`);
+  if (m.error) { toast(m.error,'error'); return; }
+  set('d-name', m.name); set('d-desc', m.description||'No description');
+  set('d-target', m.target); set('d-mid', m.id);
+  set('d-creator', m.creator);
+  set('d-features', m.features?.join(', ')||'Not trained yet');
+  set('d-members', (m.users||[]).join(', ')||'—');
+  document.getElementById('d-role-badge').textContent = m.role;
+  document.getElementById('d-role-badge').className = 'badge '+(m.role==='owner'?'badge-owner':'badge-joined');
+  document.getElementById('d-ver').textContent = `v${m.version||0}`;
+  document.getElementById('d-ver').className = 'ver-tag'+(m.version>0?' updated':'');
+  document.getElementById('d-perf').textContent = m.performance?`⬆ ${(m.performance*100).toFixed(1)}% acc`:'';
+  document.getElementById('d-updated').textContent = m.last_updated?`Updated ${m.last_updated}`:'';
+  document.getElementById('d-ver-banner').style.display = 'none';
+  selFile = null;
+  document.getElementById('drop-text').textContent = 'Click or drag & drop CSV';
+  document.getElementById('train-btn').disabled = true;
+  document.getElementById('train-result').textContent = '';
+  document.getElementById('predict-result').innerHTML = '';
+  await buildPredictForm(mid, m);
+  showPage('detail');
+}
+
+async function buildPredictForm(mid, m) {
+  const wrap = document.getElementById('predict-form-wrap');
+  if (!m.features || !m.features.length) { wrap.innerHTML='<p style="font-size:13px;color:var(--t3)">Train the model first — features will appear automatically.</p>'; return; }
+  const schema = await api(`/api/models/${mid}/schema`);
+  if (!schema||!schema.length) { wrap.innerHTML='<p style="font-size:13px;color:var(--t3)">No prediction form available yet.</p>'; return; }
+  let html = '<div class="predict-grid">';
+  schema.forEach(f => {
+    if (f.type==='select') {
+      const opts = f.options.map(o=>`<option value="${o.value}">${esc(o.label)}</option>`).join('');
+      html += `<div class="field"><label>${esc(f.label)}</label><select id="pf-${f.key}">${opts}</select></div>`;
+    } else {
+      const unitOpen  = f.unit?'<div class="field-unit">'  :'';
+      const unitClose = f.unit?`<span class="unit">${f.unit}</span></div>`:'';
+      html += `<div class="field"><label>${esc(f.label)}</label>${unitOpen}<input id="pf-${f.key}" type="number" value="${f.default||0}">${unitClose}</div>`;
+    }
+  });
+  html += `</div><button class="btn btn-primary btn-full" style="margin-top:14px" onclick="doPredict()">Run Prediction</button>`;
+  wrap.innerHTML = html;
+}
+
+async function doPredict() {
+  const inputs = {};
+  document.querySelectorAll('#predict-form-wrap [id^="pf-"]').forEach(el => { inputs[el.id.replace('pf-','')] = Number(el.value); });
+  const r = await post(`/api/models/${currentMid}/predict`, inputs);
+  const box = document.getElementById('predict-result');
+  if (r.ok) {
+    const pos = ['1','true','yes','positive'].includes(String(r.prediction).toLowerCase());
+    box.innerHTML = `<div class="result-box ${pos?'positive':'negative'}"><div class="result-lbl">Prediction Result</div><div class="result-val">${esc(String(r.label||r.prediction))}</div><div class="result-conf">confidence · ${(r.probability*100).toFixed(1)}%</div></div>`;
+  } else { box.innerHTML=`<p style="color:var(--red);font-size:13px;margin-top:10px">Error: ${esc(r.error||'Failed')}</p>`; }
+}
+
+// ── TRAINING ──────────────────────────────────────────────────────────────────
+function setupDrop() {
+  const dz = document.getElementById('drop-zone');
+  dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag');});
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop', e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)pickFile(f);});
+}
+function onFileSelect(inp){if(inp.files[0])pickFile(inp.files[0]);}
+function pickFile(f){selFile=f;document.getElementById('drop-text').textContent='📄 '+f.name;document.getElementById('train-btn').disabled=false;}
+
+async function doTrain() {
+  if (!selFile){toast('Select a CSV file first','error');return;}
+  const btn=document.getElementById('train-btn'); btn.disabled=true;btn.textContent='Training…';
+  const pw=document.getElementById('prog-wrap'),pb=document.getElementById('prog-bar');
+  pw.style.display='';pb.style.width='0%';
+  let prog=0; const iv=setInterval(()=>{prog=Math.min(prog+5,88);pb.style.width=prog+'%';},500);
+  const fd=new FormData(); fd.append('file',selFile);
+  try {
+    const r=await fetch(`/api/models/${currentMid}/train`,{method:'POST',body:fd});
+    const data=await r.json(); clearInterval(iv);pb.style.width='100%';
+    if(data.ok){
+      document.getElementById('train-result').textContent=data.message;
+      toast(data.message,data.duplicate?'info':'success');
+      if(!data.duplicate){
+        document.getElementById('d-ver').textContent=`v${data.version}`;
+        document.getElementById('d-ver').className='ver-tag updated';
+        let bt=`v${data.version}`;
+        if(data.improvement!=null){const s=data.improvement>=0?'+':'';const c=data.improvement>=0?'var(--green)':'var(--red)';bt+=` <span style="color:${c};font-weight:700">(${s}${data.improvement}pp)</span>`;}
+        document.getElementById('d-banner-ver').innerHTML=bt;
+        document.getElementById('d-ver-banner').style.display='flex';
+        if(data.performance>0)document.getElementById('d-perf').textContent=`⬆ ${data.performance}% acc`;
+      }
+      const m=await api(`/api/models/${currentMid}`); await buildPredictForm(currentMid,m);
+    } else { document.getElementById('train-result').textContent='Error: '+(data.error||'Unknown'); toast('Training failed: '+data.error,'error'); }
+  } catch(e){clearInterval(iv);toast('Network error','error');}
+  btn.disabled=false;btn.textContent='Start Training';
+  setTimeout(()=>{pw.style.display='none';pb.style.width='0%';},2500);
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('overlay'))e.target.classList.remove('open');});
+
+async function doCreate(){
+  const name=v('c-name'),desc=v('c-desc'),feat=v('c-feat'),target=v('c-target');
+  const err=document.getElementById('c-err');err.style.display='none';
+  if(!name||!target){err.textContent='Name and target required';err.style.display='';return;}
+  const r=await post('/api/models/create',{name,description:desc,features_info:feat,target});
+  if(r.ok){toast(`Model created! ID: ${r.model_id}`,'success');closeModal('m-create');['c-name','c-desc','c-feat','c-target'].forEach(id=>document.getElementById(id).value='');loadModels();}
+  else{err.textContent=r.error||'Server error';err.style.display='';}
+}
+
+async function doJoin(){
+  const mid=v('j-id'),err=document.getElementById('j-err');err.style.display='none';
+  if(!mid){err.textContent='Enter a model ID';err.style.display='';return;}
+  const r=await post('/api/models/join',{model_id:mid});
+  if(r.ok){toast('Joined!','success');closeModal('m-join');document.getElementById('j-id').value='';loadModels();}
+  else{err.textContent=r.error||r.detail||'Model not found';err.style.display='';}
+}
+
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function v(id){return document.getElementById(id)?.value.trim()||'';}
+function set(id,txt){const el=document.getElementById(id);if(el)el.textContent=txt;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function mdParse(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');}
+</script>
+</body>
+</html>
