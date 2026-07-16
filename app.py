@@ -7,7 +7,7 @@ from train_manager import train_model
 app = Flask(__name__)
 app.secret_key = "neuralhub-client-2025"
 
-SERVER_URL = " https://eternal-debtless-rebuff.ngrok-free.dev"
+SERVER_URL = " "
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
